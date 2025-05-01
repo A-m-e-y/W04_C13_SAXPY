@@ -2,36 +2,45 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Load CSV
+# Load data
 df = pd.read_csv("timing_cpuVgpu.csv")
 
-# Extract values
 powers = df['PowerOf2']
-gpu_total = df['TotalTime_ms']
-cpu_time = df['CPUTime_ms']
 labels = [f"2^{p}" for p in powers]
-
-# Bar positions
 x = np.arange(len(powers))
-bar_width = 0.35
+
+# Times
+cpu = df['CPUTime_ms']
+gpu_kernel = df['KernelTime_ms']
+gpu_total = df['TotalTime_ms']
+
+bar_width = 0.25
 
 # Plot setup
-plt.figure(figsize=(12, 6))
+plt.figure(figsize=(14, 6))
 
 # Bars
-plt.bar(x - bar_width/2, cpu_time, width=bar_width, label="CPU Time (ms)", color='lightgreen')
-plt.bar(x + bar_width/2, gpu_total, width=bar_width, label="GPU Total Time (ms)", color='salmon')
+plt.bar(x - bar_width, cpu, width=bar_width, label="CPU Time (ms)", color='lightgreen')
+plt.bar(x, gpu_kernel, width=bar_width, label="GPU Kernel Time (ms)", color='skyblue')
+plt.bar(x + bar_width, gpu_total, width=bar_width, label="GPU Total Time (ms)", color='salmon')
+
+# Annotations
+def annotate_bars(values, x_pos, offset=bar_width):
+    for i, val in enumerate(values):
+        plt.text(x_pos[i], val, f"{val:.2f}", ha='center', va='bottom', fontsize=8, rotation=90)
+
+annotate_bars(cpu, x - bar_width)
+annotate_bars(gpu_kernel, x)
+annotate_bars(gpu_total, x + bar_width)
 
 # Log scale
 plt.yscale("log")
 plt.ylabel("Execution Time (ms) [log scale]")
 plt.xlabel("N (as power of 2)")
-plt.title("SAXPY: CPU vs GPU Total Execution Time (Log Scale) - RTX-3050 4GB VRAM")
-
-# X-axis
+plt.title("SAXPY: CPU vs GPU Execution Times - RTX-3050 vs i5-12450H")
 plt.xticks(x, labels)
-plt.grid(axis='y', which='both', linestyle='--', linewidth=0.5)
+# plt.grid(axis='y', which='both', linestyle='--', linewidth=0.5)
 plt.legend()
 plt.tight_layout()
-plt.savefig("plots/cpu_vs_gpu_total_plot.png")
+plt.savefig("plots/saxpy_full_benchmark_plot.png")
 plt.show()

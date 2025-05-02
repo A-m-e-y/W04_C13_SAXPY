@@ -107,6 +107,35 @@ Logged this data into a CSV file (`timing_cpuVgpu.csv`) and visualized it using 
 
 ---
 
+## 📊 Visualization 3: Breakdown of GPU execution components
+
+<img src="plots/saxpy_gpu_time_breakdown.png" alt="Breakdown of GPU Execution Components" width="800">
+
+---
+
+
+## 🔍 Component-Wise Insights
+
+### 🔹 1. **GPU Kernel Time**
+- The kernel is consistently **very fast** — typically under **1 ms** until `N = 2^25`.
+- Even for **massive arrays (up to 500 million elements)**, it only takes **~100 ms** at worst.
+- **GPU compute is not the bottleneck**.
+
+
+### 🔹 2. **Memory Allocation and Deallocation (cudaMalloc + cudaFree)**
+- `cudaMalloc` + `cudaFree` times are **non-trivial** even for small sizes.
+- At `2^29`, `cudaMalloc = 897.8 ms`, `cudaFree = 107.8 ms` → **~1000 ms** just in memory setup and cleanup!
+- **CUDA memory allocation overhead is substantial**, especially at high `N`.
+
+
+### 🔹 3. **Host-to-Device (H2D) and Device-to-Host (D2H) Copies**
+- These are **the real bottleneck**.
+- At `2^25`, total memcpy time (H2D + D2H) is ~**67 ms**; at `2^29`, it balloons to **~1655 ms**.
+- Even before reaching huge arrays, memcpy is **already the largest contributor**.
+- **Communication latency dominates GPU performance**.
+
+---
+
 ## ✅ Final Conclusion
 
 > **The GPU kernel is dramatically faster than the CPU kernel**, but unless the **communication and memory transfer overhead** is minimized or amortized across larger workloads, the **CPU remains faster overall** in real-world total execution time.
